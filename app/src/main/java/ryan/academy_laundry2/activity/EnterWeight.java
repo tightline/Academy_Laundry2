@@ -30,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class EnterWeight extends AppCompatActivity {
     private SQLiteHandler db;
     private EditText inputCustomerName, inputWeight;
     private Button btnSubmitWeight;
-   // private Spinner spinnerCustomers;
+    private Spinner spinnerCustomers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,42 +55,59 @@ public class EnterWeight extends AppCompatActivity {
         // Session manager
         session = new SessionManager(getApplicationContext());
 
-
-       // List<String> customers;
-       // addItemsOnSpinnerCustomers(customers);
-       // spinnerCustomers.setOnItemSelectedListener(new CustomOnItemSelectedListener());
-
-        // Edit Text
-        inputCustomerName = (EditText) findViewById(R.id.fCompanyName);
-        inputWeight = (EditText) findViewById(R.id.fEnterWeight);
-
-        // Create button
-        btnSubmitWeight = (Button) findViewById(R.id.btnEnter);
-
-        // button click event
-        btnSubmitWeight.setOnClickListener(new View.OnClickListener() {
-
+        getCustomers(new VolleyCallback() {
             @Override
-            public void onClick(View view) {
-                // creating new product in background thread
-                String customer = inputCustomerName.getText().toString();
-                //String customer = String.valueOf(spinnerCustomers.getSelectedItem());
-                String weight = inputWeight.getText().toString();
+            public void onSuccess(String result) {
+                //parse result string to list add to spinner then should work?
+                try {
+                    JSONObject jObj = new JSONObject(result);
+                    JSONArray jArray = jObj.getJSONArray("customers");
+                    ArrayList<String> customers = new ArrayList<String>();
+                    if (jArray != null) {
+                        for (int i = 0; i < jArray.length(); i++) {
+                            customers.add(jArray.getJSONObject(i).optString("customer"));
+                        }
+                    }
+                    Collections.sort(customers, String.CASE_INSENSITIVE_ORDER);
+                    addItemsOnSpinnerCustomers(customers);
+                    spinnerCustomers.setOnItemSelectedListener(new CustomOnItemSelectedListener());
 
+                    // Edit Text
+                    //inputCustomerName = (EditText) findViewById(R.id.fCompanyName);
+                    inputWeight = (EditText) findViewById(R.id.fEnterWeight);
 
-                if (!customer.isEmpty() && !weight.isEmpty()) {
-                    SubmitWeight( customer, weight);
-                } else {
-                    // Prompt user to enter credentials
-                    Toast.makeText(getApplicationContext(),
-                            "Please enter the customer and weight!", Toast.LENGTH_LONG)
-                            .show();
+                    // Create button
+                    btnSubmitWeight = (Button) findViewById(R.id.btnEnter);
+
+                    // button click event
+                    btnSubmitWeight.setOnClickListener(new View.OnClickListener() {
+
+                        @Override
+                        public void onClick(View view) {
+                            // creating new product in background thread
+                            String customer = String.valueOf(spinnerCustomers.getSelectedItem());
+                            String weight = inputWeight.getText().toString();
+
+                            if (!customer.isEmpty() && !weight.isEmpty()) {
+                                SubmitWeight(customer, weight);
+                            } else {
+                                // Prompt user to enter credentials
+                                Toast.makeText(getApplicationContext(),
+                                        "Please enter the customer and weight!", Toast.LENGTH_LONG)
+                                        .show();
+                            }
+
+                        }
+                    });
+                } catch (JSONException e) {
+                    Log.e("Enter Weight", "json error");
                 }
             }
         });
 
 
     }
+
     @Override
     public void onBackPressed() {
         Intent intent = new Intent(
@@ -98,76 +116,139 @@ public class EnterWeight extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-    private void SubmitWeight(final String customer, final String weight)  {
+
+    private void SubmitWeight(final String customer, final String weight) {
         /**
          * Function to store weight in MySQL database will post params(customer, weight) to storeweight url
          * */
 
-            // Tag used to cancel the request
-            String tag_string_req = "req_enter_weight";
+        // Tag used to cancel the request
+        String tag_string_req = "req_enter_weight";
 
-            pDialog.setMessage("Entering ...");
-            showDialog();
+        pDialog.setMessage("Entering ...");
+        showDialog();
 
-            StringRequest strReq = new StringRequest(Request.Method.POST,
-                    AppConfig.URL_STORE_WEIGHT, new Response.Listener<String>() {
+        StringRequest strReq = new StringRequest(Request.Method.POST,
+                AppConfig.URL_STORE_WEIGHT, new Response.Listener<String>() {
 
-                @Override
-                public void onResponse(String response) {
-                    Log.d(TAG, "Enter weight Response: " + response.toString());
-                    hideDialog();
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "Enter weight Response: " + response.toString());
+                hideDialog();
 
-                    try {
-                        JSONObject jObj = new JSONObject(response);
-                        boolean error = jObj.getBoolean("error");
-                        if (!error) {
-                            // weight successfully stored in MySQL
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+                    if (!error) {
+                        // weight successfully stored in MySQL
 
-                            Toast.makeText(getApplicationContext(), "Weight succefully entered!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Weight succefully entered!", Toast.LENGTH_LONG).show();
 
-                            Intent intent = new Intent(
-                                    EnterWeight.this,
-                                    HomeScreen.class);
-                            startActivity(intent);
-                            finish();
-                        } else {
+                        Intent intent = new Intent(
+                                EnterWeight.this,
+                                HomeScreen.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
 
-                            // Error occurred in registration. Get the error
-                            // message
-                            String errorMsg = jObj.getString("error_msg");
-                            Toast.makeText(getApplicationContext(),
-                                    errorMsg, Toast.LENGTH_LONG).show();
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                        // Error occurred in registration. Get the error
+                        // message
+                        String errorMsg = jObj.getString("error_msg");
+                        Toast.makeText(getApplicationContext(),
+                                errorMsg, Toast.LENGTH_LONG).show();
                     }
-
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            }, new Response.ErrorListener() {
 
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e(TAG, "Weight entry Error: " + error.getMessage());
-                    Toast.makeText(getApplicationContext(),
-                            error.getMessage(), Toast.LENGTH_LONG).show();
-                    hideDialog();
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Weight entry Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_LONG).show();
+                hideDialog();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting params to register url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("customer", customer);
+                params.put("weight", weight);
+
+
+                return params;
+            }
+        };
+        // Adding request to request queue
+        AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
+    }
+
+
+    //callback.onSuccess(response);
+    public void getCustomers(final VolleyCallback callback) {
+        String tag_string_req = "req_get_customers";
+
+        pDialog.setMessage("Retrieving data ...");
+        showDialog();
+
+        StringRequest strReq = new StringRequest(Request.Method.POST,
+                AppConfig.URL_GET_CUSTOMERS, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "Enter weight Response: " + response.toString());
+                hideDialog();
+
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+                    if (!error) {
+                        // weight successfully stored in MySQL
+                        callback.onSuccess(response);
+                        //Toast.makeText(getApplicationContext(), "custs recieved!", Toast.LENGTH_LONG).show();
+
+
+                    } else {
+
+                        // Error occurred in registration. Get the error
+                        // message
+                        String errorMsg = jObj.getString("error_msg");
+                        Toast.makeText(getApplicationContext(),
+                                errorMsg, Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            }) {
 
-                @Override
-                protected Map<String, String> getParams() {
-                    // Posting params to register url
-                    Map<String, String> params = new HashMap<String, String>();
-                    params.put("customer", customer);
-                    params.put("weight", weight);
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Cust retrieval Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_LONG).show();
+                hideDialog();
+            }
+        }) {
 
 
-                    return params;
-                }
-            };
-            // Adding request to request queue
-            AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
-        }
+        };
+        // Adding request to request queue
+        AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
+
+    }
+
+
+    public interface VolleyCallback {
+        void onSuccess(String result);
+    }
+
 
     private void showDialog() {
         if (!pDialog.isShowing())
@@ -180,7 +261,7 @@ public class EnterWeight extends AppCompatActivity {
     }
 
 
-  /*  public void addItemsOnSpinnerCustomers(List<String> list) {
+    public void addItemsOnSpinnerCustomers(ArrayList<String> list) {
 
         spinnerCustomers = (Spinner) findViewById(R.id.spinnerCustomers);
 
@@ -189,7 +270,7 @@ public class EnterWeight extends AppCompatActivity {
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCustomers.setAdapter(dataAdapter);
     }
-*/
+
 
 }
 

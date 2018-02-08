@@ -22,7 +22,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-
 import ryan.academy_laundry2.app.AppConfig;
 import ryan.academy_laundry2.app.AppController;
 import ryan.academy_laundry2.helper.SessionManager;
@@ -31,6 +30,7 @@ public class ViewPreviousWeights extends Activity {
     private static final String TAG = RegisterActivity.class.getSimpleName();
     private ProgressDialog pDialog;
     private SessionManager session;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,23 +64,25 @@ public class ViewPreviousWeights extends Activity {
                         JSONArray jarray;
                         try {
                             jarray = jObj.getJSONArray("weights");
-                            for(int i =0;i<50;i++) {
-                                TextView textView1 = new TextView(ViewPreviousWeights.this);
-                                textView1.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                                        LinearLayout.LayoutParams.WRAP_CONTENT));
-                                textView1.setText(i+": "+jarray.getJSONObject(i).optString("customer")+":  "
-                                        +jarray.getJSONObject(i).optString("weight"));
-                                //textView1.setBackgroundColor(0xff66ff66); // hex color 0xAARRGGBB
-                                textView1.setPadding(50, 20, 20, 20);// in pixels (left, top, right, bottom)
-                                linearLayout.addView(textView1);
+                            if (jarray != null) {
+                                for (int i = 0; i < jarray.length(); i++) {
+                                    TextView textView1 = new TextView(ViewPreviousWeights.this);
+                                    textView1.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                                            LinearLayout.LayoutParams.WRAP_CONTENT));
+                                    textView1.setText(i + ": " + jarray.getJSONObject(i).optString("customer") + ":  "
+                                            + jarray.getJSONObject(i).optString("weight"));
+                                    //textView1.setBackgroundColor(0xff66ff66); // hex color 0xAARRGGBB
+                                    textView1.setPadding(50, 20, 20, 20);// in pixels (left, top, right, bottom)
+                                    linearLayout.addView(textView1);
+                                }
                             }
-                        }catch(JSONException e){
+                        } catch (JSONException e) {
 
                         }
 
-                       // Intent intent = new Intent(
+                        // Intent intent = new Intent(
                         //        ViewPreviousWeights.this,
-                          //      HomeScreen.class);
+                        //      HomeScreen.class);
                         //startActivity(intent);
                         //finish();
                     } else {

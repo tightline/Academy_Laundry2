@@ -34,7 +34,6 @@ import ryan.academy_laundry2.app.AppController;
 import ryan.academy_laundry2.app.AppConfig;
 
 
-
 public class LoginActivity extends Activity {
     private static final String TAG = RegisterActivity.class.getSimpleName();
     private Button btnLogin;
@@ -109,7 +108,7 @@ public class LoginActivity extends Activity {
 
     /**
      * function to verify login details in mysql db
-     * */
+     */
     private void checkLogin(final String email, final String password) {
         // Tag used to cancel the request
         String tag_string_req = "req_login";
@@ -171,7 +170,7 @@ public class LoginActivity extends Activity {
             public void onErrorResponse(VolleyError error) {
                 Log.e(TAG, "Login Error: " + error.getMessage());
                 Toast.makeText(getApplicationContext(),
-                         error.getMessage(), Toast.LENGTH_LONG).show();
+                        error.getMessage(), Toast.LENGTH_LONG).show();
                 hideDialog();
             }
         }) {
@@ -201,8 +200,6 @@ public class LoginActivity extends Activity {
         if (pDialog.isShowing())
             pDialog.dismiss();
     }
-
-
 
 
 }

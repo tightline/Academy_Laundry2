@@ -21,6 +21,7 @@ public class HomeScreen extends Activity {
 
     private SQLiteHandler db;
     private SessionManager session;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,11 +39,11 @@ public class HomeScreen extends Activity {
         }
 
 
-        btnEnterWeight.setOnClickListener(new View.OnClickListener(){
+        btnEnterWeight.setOnClickListener(new View.OnClickListener() {
 
             @Override
-            public void onClick(View V)  {
-                Intent intent = new Intent(HomeScreen.this, EnterWeight.class );
+            public void onClick(View V) {
+                Intent intent = new Intent(HomeScreen.this, EnterWeight.class);
                 startActivity(intent);
                 finish();
             }
@@ -50,10 +51,10 @@ public class HomeScreen extends Activity {
 
         });
 
-        btnViewRecent.setOnClickListener(new View.OnClickListener(){
+        btnViewRecent.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View V)  {
-                Intent intent = new Intent(HomeScreen.this, ViewPreviousWeights.class );
+            public void onClick(View V) {
+                Intent intent = new Intent(HomeScreen.this, ViewPreviousWeights.class);
                 startActivity(intent);
             }
         });
@@ -66,6 +67,7 @@ public class HomeScreen extends Activity {
             }
         });
     }
+
     private void logoutUser() {
         session.setLogin(false);
 
