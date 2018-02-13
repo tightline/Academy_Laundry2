@@ -2,7 +2,6 @@ package ryan.academy_laundry2.activity;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.LinearLayout;
@@ -22,25 +21,31 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 import ryan.academy_laundry2.app.AppConfig;
 import ryan.academy_laundry2.app.AppController;
+import ryan.academy_laundry2.helper.SQLiteHandler;
 import ryan.academy_laundry2.helper.SessionManager;
 
 public class ViewPreviousWeights extends Activity {
     private static final String TAG = RegisterActivity.class.getSimpleName();
     private ProgressDialog pDialog;
+    private SQLiteHandler db;
     private SessionManager session;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_previous_weights);
+        db = new SQLiteHandler(getApplicationContext());
+        session = new SessionManager(getApplicationContext());
 
         pDialog = new ProgressDialog(this);
         pDialog.setCancelable(false);
 
         // Session manager
-        session = new SessionManager(getApplicationContext());
         final LinearLayout linearLayout = (LinearLayout) findViewById(R.id.linear_layout);
 
 
@@ -77,14 +82,9 @@ public class ViewPreviousWeights extends Activity {
                                 }
                             }
                         } catch (JSONException e) {
-
+                            //do something here
                         }
 
-                        // Intent intent = new Intent(
-                        //        ViewPreviousWeights.this,
-                        //      HomeScreen.class);
-                        //startActivity(intent);
-                        //finish();
                     } else {
 
                         // Error occurred in registration. Get the error
@@ -107,8 +107,20 @@ public class ViewPreviousWeights extends Activity {
                         error.getMessage(), Toast.LENGTH_LONG).show();
                 hideDialog();
             }
-        }) {
-//put code here for username pass entry to send
+        }){
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting params to register url
+
+                Map<String, String> params = new HashMap<String, String>();
+                Map<String, String> user;// = new HashMap<String, String>();
+                user = db.getCreds(session.getEmail());
+                params.put("email", user.get("email"));
+                params.put("uid", user.get("uid"));
+
+                return params;
+            }
         };
 
         // Adding request to request queue

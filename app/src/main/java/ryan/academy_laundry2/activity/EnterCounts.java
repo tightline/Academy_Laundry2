@@ -1,8 +1,8 @@
 package ryan.academy_laundry2.activity;
 
 import android.app.ProgressDialog;
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -16,13 +16,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 
-import ryan.academy_laundry2.R;
-import ryan.academy_laundry2.app.AppConfig;
-import ryan.academy_laundry2.app.AppController;
-import ryan.academy_laundry2.helper.CustomOnItemSelectedListener;
-import ryan.academy_laundry2.helper.SQLiteHandler;
-import ryan.academy_laundry2.helper.SessionManager;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,25 +25,36 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EnterWeight extends AppCompatActivity {
+import ryan.academy_laundry2.R;
+import ryan.academy_laundry2.app.AppConfig;
+import ryan.academy_laundry2.app.AppController;
+import ryan.academy_laundry2.helper.CustomOnItemSelectedListener;
+import ryan.academy_laundry2.helper.SQLiteHandler;
+import ryan.academy_laundry2.helper.SessionManager;
+
+public class EnterCounts extends AppCompatActivity {
     private static final String TAG = RegisterActivity.class.getSimpleName();
     private ProgressDialog pDialog;
-    private EditText inputWeight;
-    private Button btnSubmitWeight;
-    private Spinner spinnerCustomers;
+    private EditText inputBigbeds, inputBlankets, inputComforters, inputMattresspads, inputPillows,
+            inputRobes, inputShowercurtains, inputShowerliners;
+    private Button btnSubmitCount;
+    private Spinner spinnerCustomersCounts;
     private SQLiteHandler db;
     private SessionManager session;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_enter_weight);
-        db = new SQLiteHandler(getApplicationContext());
+        setContentView(R.layout.activity_enter_counts);
         session = new SessionManager(getApplicationContext());
 
+        db = new SQLiteHandler(getApplicationContext());
         pDialog = new ProgressDialog(this);
         pDialog.setCancelable(false);
 
+        // Session manager
 
         getCustomers(new VolleyCallback() {
             @Override
@@ -67,33 +71,52 @@ public class EnterWeight extends AppCompatActivity {
                     }
                     Collections.sort(customers, String.CASE_INSENSITIVE_ORDER);
                     addItemsOnSpinnerCustomers(customers);
-                    spinnerCustomers.setOnItemSelectedListener(new CustomOnItemSelectedListener());
+                    spinnerCustomersCounts.setOnItemSelectedListener(new CustomOnItemSelectedListener());
 
-                    // Edit Text
-                    //inputCustomerName = (EditText) findViewById(R.id.fCompanyName);
-                    inputWeight = (EditText) findViewById(R.id.fEnterWeight);
-
-                    // Create button
-                    btnSubmitWeight = (Button) findViewById(R.id.btnEnter);
+                    inputBigbeds = (EditText) findViewById(R.id.fbig_bed);
+                    inputBlankets = (EditText) findViewById(R.id.fblankets);
+                    inputComforters = (EditText) findViewById(R.id.fcomforters);
+                    inputMattresspads = (EditText) findViewById(R.id.fmattresspads);
+                    inputPillows = (EditText) findViewById(R.id.fpillows);
+                    inputRobes = (EditText) findViewById(R.id.frobes);
+                    inputShowercurtains = (EditText) findViewById(R.id.fshowercurtains);
+                    inputShowerliners = (EditText) findViewById(R.id.fshowerliners);
+                    btnSubmitCount = (Button) findViewById(R.id.btn_counts);
 
                     // button click event
-                    btnSubmitWeight.setOnClickListener(new View.OnClickListener() {
+                    btnSubmitCount.setOnClickListener(new View.OnClickListener() {
 
                         @Override
                         public void onClick(View view) {
                             // creating new product in background thread
-                            String customer = String.valueOf(spinnerCustomers.getSelectedItem());
-                            String weight = inputWeight.getText().toString();
+                            String customer = String.valueOf(spinnerCustomersCounts.getSelectedItem());
+                            //assign all values here
 
-                            if (!customer.isEmpty() && !weight.isEmpty()) {
-                                SubmitWeight(customer, weight);
+                            String bigBeds = inputBigbeds.getText().toString();
+                            String blankets = inputBlankets.getText().toString();
+                            String comforters = inputComforters.getText().toString();
+                            String mattressPads = inputMattresspads.getText().toString();
+                            String pillows = inputPillows.getText().toString();
+                            String robes = inputRobes.getText().toString();
+                            String showerCurtains = inputShowercurtains.getText().toString();
+                            String showerLiners = inputShowerliners.getText().toString();
+                            //check if any are empty if so then make 0
+                            if (!customer.isEmpty()) {
+                                //if not assigned a value set to zero
+                                if(bigBeds.isEmpty()){bigBeds="0";}
+                                if(blankets.isEmpty()){blankets="0";}
+                                if(comforters.isEmpty()){comforters="0";}
+                                if(mattressPads.isEmpty()){mattressPads="0";}
+                                if(pillows.isEmpty()){pillows="0";}
+                                if(robes.isEmpty()){robes="0";}
+                                if(showerCurtains.isEmpty()){showerCurtains="0";}
+                                if(showerLiners.isEmpty()){showerLiners="0";}
+                                SubmitCount(customer, bigBeds, blankets, comforters, mattressPads, pillows, robes, showerCurtains, showerLiners);
                             } else {
-                                // Prompt user to enter credentials
                                 Toast.makeText(getApplicationContext(),
                                         "Please enter the customer and weight!", Toast.LENGTH_LONG)
                                         .show();
                             }
-
                         }
                     });
                 } catch (JSONException e) {
@@ -103,23 +126,25 @@ public class EnterWeight extends AppCompatActivity {
         });
     }
 
-    private void SubmitWeight(final String customer, final String weight) {
+    private void SubmitCount(final String customer, final String bigBeds, final String blankets, final String comforters,
+                             final String mattressPads, final String pillows, final String robes,
+                             final String showerCurtains, final String showerLiners) {
         /**
          * Function to store weight in MySQL database will post params(customer, weight) to storeweight url
          * */
 
         // Tag used to cancel the request
-        String tag_string_req = "req_enter_weight";
+        String tag_string_req = "req_enter_counts";
 
         pDialog.setMessage("Entering ...");
         showDialog();
 
         StringRequest strReq = new StringRequest(Request.Method.POST,
-                AppConfig.URL_STORE_WEIGHT, new Response.Listener<String>() {
+                AppConfig.URL_STORE_COUNTS, new Response.Listener<String>() {
 
             @Override
             public void onResponse(String response) {
-                Log.d(TAG, "Enter weight Response: " + response.toString());
+                Log.d(TAG, "Enter counts Response: " + response.toString());
                 hideDialog();
 
                 try {
@@ -127,10 +152,9 @@ public class EnterWeight extends AppCompatActivity {
                     boolean error = jObj.getBoolean("error");
                     if (!error) {
                         // weight successfully stored in MySQL
-                        Toast.makeText(getApplicationContext(), "Weight succefully entered!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Counts succefully entered!", Toast.LENGTH_LONG).show();
                         finish();
                     } else {
-
                         // Error occurred in registration. Get the error
                         // message
                         String errorMsg = jObj.getString("error_msg");
@@ -145,7 +169,7 @@ public class EnterWeight extends AppCompatActivity {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "Weight entry Error: " + error.getMessage());
+                Log.e(TAG, "Count entry Error: " + error.getMessage());
                 Toast.makeText(getApplicationContext(),
                         error.getMessage(), Toast.LENGTH_LONG).show();
                 hideDialog();
@@ -155,13 +179,21 @@ public class EnterWeight extends AppCompatActivity {
             @Override
             protected Map<String, String> getParams() {
                 // Posting params to register url
+
                 Map<String, String> params = new HashMap<String, String>();
-               Map<String, String> user;// = new HashMap<String, String>();
+                Map<String, String> user;// = new HashMap<String, String>();
                 user = db.getCreds(session.getEmail());
                 params.put("email", user.get("email"));
                 params.put("uid", user.get("uid"));
                 params.put("customer", customer);
-                params.put("weight", weight);
+                params.put("bigbeds", bigBeds);
+                params.put("blankets", blankets);
+                params.put("comforters", comforters);
+                params.put("mattresspads", mattressPads);
+                params.put("robes", robes);
+                params.put("pillows",pillows);
+                params.put("showercurtains", showerCurtains);
+                params.put("showerliners", showerLiners);
 
 
                 return params;
@@ -169,9 +201,9 @@ public class EnterWeight extends AppCompatActivity {
         };
         // Adding request to request queue
         AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
+
     }
 
-    //callback.onSuccess(response);
     public void getCustomers(final VolleyCallback callback) {
         String tag_string_req = "req_get_customers";
 
@@ -192,11 +224,7 @@ public class EnterWeight extends AppCompatActivity {
                     if (!error) {
                         // weight successfully stored in MySQL
                         callback.onSuccess(response);
-                        //Toast.makeText(getApplicationContext(), "custs recieved!", Toast.LENGTH_LONG).show();
-
-
                     } else {
-
                         // Error occurred in registration. Get the error
                         // message
                         String errorMsg = jObj.getString("error_msg");
@@ -206,7 +234,6 @@ public class EnterWeight extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
             }
         }, new Response.ErrorListener() {
 
@@ -217,20 +244,18 @@ public class EnterWeight extends AppCompatActivity {
                         error.getMessage(), Toast.LENGTH_LONG).show();
                 hideDialog();
             }
-        })
-        {
+        }){
 
             @Override
             protected Map<String, String> getParams() {
                 // Posting params to register url
 
                 Map<String, String> params = new HashMap<String, String>();
-                Map<String, String> user;// = new HashMap<String, String>();
+                Map<String, String> user;//= new HashMap<String, String>();
                 user = db.getCreds(session.getEmail());
                 params.put("email", user.get("email"));
-                Log.e("email is thsi", user.get("email"));
                 params.put("uid", user.get("uid"));
-
+                Log.e("Parameters", params.toString());
                 return params;
             }
         };
@@ -238,11 +263,9 @@ public class EnterWeight extends AppCompatActivity {
         AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
     }
 
-
     public interface VolleyCallback {
         void onSuccess(String result);
     }
-
 
     private void showDialog() {
         if (!pDialog.isShowing())
@@ -257,15 +280,11 @@ public class EnterWeight extends AppCompatActivity {
 
     public void addItemsOnSpinnerCustomers(ArrayList<String> list) {
 
-        spinnerCustomers = (Spinner) findViewById(R.id.spinnerCustomers);
+        spinnerCustomersCounts = (Spinner) findViewById(R.id.spinnerCustomersCounts);
 
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, list);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerCustomers.setAdapter(dataAdapter);
+        spinnerCustomersCounts.setAdapter(dataAdapter);
     }
-
-
 }
-
-

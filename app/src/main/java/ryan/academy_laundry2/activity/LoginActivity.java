@@ -132,20 +132,23 @@ public class LoginActivity extends Activity {
                     // Check for error node in json
                     if (!error) {
                         // user successfully logged in
-                        // Create login session
-                        session.setLogin(true);
 
                         // Now store the user in SQLite
                         String uid = jObj.getString("uid");
 
+
                         JSONObject user = jObj.getJSONObject("user");
                         String name = user.getString("name");
                         String email = user.getString("email");
+                        String grouptype = user.getString("grouptype");
                         String created_at = user
                                 .getString("created_at");
+                        // Create login session
+
+                        session.setLogin(true, email);
 
                         // Inserting row in users table
-                        db.addUser(name, email, uid, created_at);
+                        db.addUser(name, email, uid, grouptype, created_at);
                         // Launch main activity
                         Intent intent = new Intent(LoginActivity.this,
                                 HomeScreen.class);
@@ -168,7 +171,7 @@ public class LoginActivity extends Activity {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "Login Error: " + error.getMessage());
+                Log.e(TAG, "Login1 Error: " + error.getMessage());
                 Toast.makeText(getApplicationContext(),
                         error.getMessage(), Toast.LENGTH_LONG).show();
                 hideDialog();

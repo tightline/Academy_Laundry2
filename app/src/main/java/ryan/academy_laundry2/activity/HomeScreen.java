@@ -6,18 +6,16 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import java.util.HashMap;
-
 import ryan.academy_laundry2.R;
 import ryan.academy_laundry2.helper.SQLiteHandler;
 import ryan.academy_laundry2.helper.SessionManager;
 
 
 public class HomeScreen extends Activity {
-    //private static final int ENTER_WEIGHT_RETURN=0;
     Button btnEnterWeight;
     Button btnViewRecent;
     Button btnLogout;
+    Button btnEnterCounts;
 
     private SQLiteHandler db;
     private SessionManager session;
@@ -30,6 +28,7 @@ public class HomeScreen extends Activity {
         btnEnterWeight = (Button) findViewById(R.id.btnWeightHome);
         btnViewRecent = (Button) findViewById(R.id.btnRecent);
         btnLogout = (Button) findViewById(R.id.btnLogout);
+        btnEnterCounts =(Button) findViewById(R.id.btnCounts);
 
         session = new SessionManager(getApplicationContext());
         db = new SQLiteHandler(getApplicationContext());
@@ -38,6 +37,16 @@ public class HomeScreen extends Activity {
             logoutUser();
         }
 
+        btnEnterCounts.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View V) {
+                Intent intent = new Intent(HomeScreen.this, EnterCounts.class);
+                startActivity(intent);
+            }
+
+
+        });
 
         btnEnterWeight.setOnClickListener(new View.OnClickListener() {
 
@@ -45,7 +54,6 @@ public class HomeScreen extends Activity {
             public void onClick(View V) {
                 Intent intent = new Intent(HomeScreen.this, EnterWeight.class);
                 startActivity(intent);
-                finish();
             }
 
 
@@ -69,7 +77,7 @@ public class HomeScreen extends Activity {
     }
 
     private void logoutUser() {
-        session.setLogin(false);
+        session.setLogin(false,"0");
 
         db.deleteUsers();
 
